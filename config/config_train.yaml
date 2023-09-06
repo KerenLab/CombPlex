@@ -1,0 +1,23 @@
+# general settings
+model_name: my_model_name
+W&B_entity: your_W&B_entity
+seed: # [empty | num in (0, 2 ** 32)], Leave empty for random seed or set a number
+
+# data settings
+data_type: naive # [naive | MIBI | Fluorescence], select imaging platform for simulation
+training_dataset_path: datasets/my_training_set_path # path to training set folder
+validation_dataset_path: datasets/my_validation_set_path # path to validation set folder
+compression_matrix_form_path: compression_matrices/my_compression_matrices.csv # path to compression matrices form
+compression_matrix_noise: 0.1 # recommended: 0.1, std of noise on compression matrix
+fluorescence_gaussian_noise: 0.25 # Leave empty or recommended: 0.25, std coefficient of white noise during simulation for data_type='Fluorescence'
+skew_parameters_csv_path: compression_matrices/my_skew_parameters.csv # path to skew parameters for data_type='Fluorescence'
+
+# decompression masking network settings
+num_epochs: 120000 # set training epochs
+running_time: 11.8 # max training time; checkpoint will be saved before exit
+batch_size: 4 # recommended: 4
+crop_size: 512 # recommended: 512
+lr: 0.0001 # recommended: 0.0001
+validation_frequency: 20 # validation epoch frequency
+save_checkpoint_freq: 10000 # checkpoint frequency
+model_features: [64, 128, 128, 256, 256] # recommended: [64, 128, 128, 256, 256]

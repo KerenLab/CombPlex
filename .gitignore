@@ -1,0 +1,13 @@
+/wandb/
+/results/*
+lsf*
+/pretrained_models/*
+/datasets/*
+/temp/
+._*
+models/.DS_Store
+.DS_Store
+__pycache__
+*/__pycache__
+*/*/__pycache__
+.idea/
