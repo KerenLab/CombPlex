@@ -9,7 +9,7 @@ Explore the `CombPlex_demo.ipynb` Jupyter Notebook for a guided walkthrough that
 The code is compatible with Python 3.9 and PyTorch 2.0, and GPU access is required.
 You can create an anaconda environment called **CombPlex** with the required dependencies by running:
 ```
-conda env create -f environment.yml
+conda env create -f requirements.yml
 conda activate CombPlex
 ```
 

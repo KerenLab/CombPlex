@@ -86,7 +86,7 @@ with open(f'compression_matrices/{output_filename}.csv', "w", newline="") as csv
     csv_writer = csv.writer(csvfile)
     for line in lines:
         cells = line.split(',')
-        [cell.replace(';', ',') for cell in cells]
+        cells = [cell.replace(';', ',') for cell in cells]
         csv_writer.writerow(cells)
 
 

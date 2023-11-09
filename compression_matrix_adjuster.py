@@ -150,5 +150,5 @@ with open(compression_matrices_csv_path, "w", newline="") as csvfile:
     csv_writer = csv.writer(csvfile)
     for line in lines:
         cells = line.split(',')
-        [cell.replace(';', ',') for cell in cells]
+        cells = [cell.replace(';', ',') for cell in cells]
         csv_writer.writerow(cells)
