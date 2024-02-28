@@ -2,20 +2,16 @@
 results_folder_name: CODEX7to3_demo_results
 
 # data settings
-data_type: Fluorescence # [naive | MIBI | Fluorescence], select imaging platform
+imaging_platform: CODEX # [CODEX | MIBI], select imaging platform
 test_dataset_path: datasets/Test_CODEX_7to3_demo_dataset # path to test set folder
-compression_matrix_form_path: compression_matrices/CODEX_7to3_paper_exp.csv # path to compression matrices form
-skew_parameters_csv_path: compression_matrices/CODEX7to3_skew_parameters.csv # Empty or path for data_type='Fluorescence'
-
-# ensembling settings
-model_names: ['CODEX_7to3_paper_exp'] # trained model filename(s)
-agreement: 0.8 # recommended: 0.8, agreement fraction for positive classification
-
-# optimization phase settings
-lr: 100 # recommended: 100 (CODEX) or 0.1 (MIBI)
-num_iterations: 8000 # recommended: 8000 (CODEX) or 1000 (MIBI)
+compression_matrix_form_path: compression_matrices/CODEX_7to3_real_to_real.csv  # path to compression matrices form
 center_crop: 768 # Empty for whole image or number of pixels
-model_features: [64, 128, 128, 256, 256] # model features of your training model
+
+# inference settings
+masking_models_folder: pretrained_models/CODEX_7to3_demo/binary # path to decompression masking models folder to use for inference
+values_reconstruction_models_folder: pretrained_models/CODEX_7to3_demo/values # path to value reconstruction models folder to use for inference
+agreement: 0.5 # agreement fraction for positive classification
+evaluate_with_GT: True # [True | False]
 
 
 

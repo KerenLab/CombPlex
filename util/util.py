@@ -1,8 +1,37 @@
-from torch.optim import lr_scheduler
 import torch
 import os
+import yaml
+import numpy as np
+import random
 import pandas as pd
 
+# This function creates relevant config acccording to model type and the user's config
+def get_config(model_type):
+    # read user's config
+    with open("config/config_train.yaml", "r") as f:
+        user_config = yaml.safe_load(f)
+
+    # initialize new_config with model_type
+    config = {'model_type': model_type}
+
+    # Exclude keys "Decompression masking network" and "Value reconstruction network" and add the others to new_config
+    excluded_keys = ["Decompression masking network", "Value reconstruction network"]
+    config.update({key: value for key, value in user_config.items() if key not in excluded_keys})
+
+    # add relevant keys according to model_type
+    config.update(user_config[model_type])
+    
+    return config
+
+# This function sets a seed number according to user's input in config
+def set_seed(config):
+    seed = np.random.randint(2 ** 32 - 1, dtype=np.int64) if config['seed'] == None else config['seed']
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    print(f'running with seed: {seed}.')
+
+#This function reads all the needed information from the user's compression matrix form
 def read_compression_matrix_form(compression_matrix_form_path):
     # Read the Excel or csv file
     settings_form_df = pd.read_csv(compression_matrix_form_path, index_col=0, header=None)
@@ -10,7 +39,7 @@ def read_compression_matrix_form(compression_matrix_form_path):
     # Identify row indices and their separators
     seperators = ['Reconstruction matrix A (note: protein and channel names can be represented by nicknames instead of filenames):',
                   'Training compression matrix (note: the columns and rows headers must be filenames. Also, keep the same order)',
-                  'Test compression matrix (note: the columns and rows headers be filenames. Also, keep the same order)',
+                  'Test compression matrix (note: the columns and rows headers must be filenames. Also, keep the same order)',
                   'GT filename for each protein (note: keep the same order):']
     iloc_values = [settings_form_df.index.get_loc(seperator) for seperator in seperators]
     iloc_values = [x + 1 for x in iloc_values]
@@ -29,27 +58,34 @@ def read_compression_matrix_form(compression_matrix_form_path):
 
     return A_df, singles_nicknames, multis_nicknames, train_compression_matrix, test_compression_matrix, GT_filenames
 
-def get_scheduler(optimizer, cfg):
-    scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda x: 1)
-    return scheduler
+# Pytorch version of F1 score
+def F1_scores(GT_singles, preds, singles_names, log_data, is_validation):
+    # calculate F1 score for two  Pytorch tensors
+    epsilon = 1e-7
+    b, c = GT_singles.shape[:2]
+    target = (GT_singles > 0).float().reshape(b, c, -1)
+    pred = (preds.detach() > 0.5).float().reshape(b, c, -1)
+    for i, channel in enumerate(singles_names):
+        target_i = target[0, i]
+        pred_i = pred[0, i]
+        f1 = (2 * (target_i * pred_i).sum() + epsilon) / (target_i.sum() + pred_i.sum() + epsilon)
+        log_data[f'{channel}{"_validation" if is_validation else ""}_f1'] = f1
+    return log_data
 
-
-def get_optimizer(cfg, params):
-    optimizer = torch.optim.Adam(params, lr=cfg['lr'])
-    return optimizer
-
-
-def save_checkpoint(model, optimizer, current_epoch, optimal_validation_loss, outputs_dir, model_name, save_name='latest'):
+# This function saves a checkpoint of the model with all information needed
+def save_checkpoint(model, optimizer, current_epoch, optimal_validation_loss, outputs_dir, model_name,
+                    model_features, save_name='latest'):
     # Create a dictionary containing the current state of the model, optimizer, and other relevant values
     checkpoint_state = {
         "model": model.state_dict(),
         "optimizer": optimizer.state_dict(),
         "step": current_epoch,
         "optimal_validation_loss": optimal_validation_loss,
+        "model_features": model_features
     }
     
     # Create the path for the checkpoint file using the provided logging directory and save_name
-    checkpoint_path = os.path.join(outputs_dir, "{}-{}.pt".format(model_name, save_name))
+    checkpoint_path = os.path.join(outputs_dir, f"{model_name}-{save_name}.pt")
     
     # Save the checkpoint dictionary to the specified file path
     torch.save(checkpoint_state, checkpoint_path)

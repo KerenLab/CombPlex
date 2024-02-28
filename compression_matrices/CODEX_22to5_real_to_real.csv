@@ -1,0 +1,23 @@
+Reconstruction matrix A (note: protein and channel names can be represented by nicknames instead of filenames):,,,,,,,,,,,,,,,,,,,,,,
+,Glut1,CK5,CD4,Pan-Keratin,COL1A1,ECAD,CD14,CD8,CD68,FAP,HLA-DRDPDQ,TOX,Tryptase,CD3,SMA,CK7,CD15,gH2AX,CD31,CD38,CD20,KI67
+multi1,0,0,0,1,0,0,0,0,1,0,0,1,1,0,1,0,1,0,0,1,1,1
+multi2,0,1,0,0,0,0,1,1,0,1,0,0,1,0,0,1,1,1,0,1,0,0
+multi3,0,0,1,0,0,1,0,0,0,1,0,1,0,1,0,1,0,1,1,0,1,0
+multi4,0,0,0,0,1,1,0,1,1,0,1,0,0,0,0,1,1,0,1,0,1,1
+multi5,1,0,0,0,0,0,1,0,0,0,1,0,0,1,1,0,0,1,1,1,0,1
+"Training compression matrix (note: the columns and rows headers must be filenames. Also, keep the same order)",,,,,,,,,,,,,,,,,,,,,,
+,Multi5,Multi4,Multi3,Multi2,Multi1,,,,,,,,,,,,,,,,,
+multi1,0,0,0,0,1,,,,,,,,,,,,,,,,,
+multi2,0,0,0,1,0,,,,,,,,,,,,,,,,,
+multi3,0,0,1,0,0,,,,,,,,,,,,,,,,,
+multi4,0,1,0,0,0,,,,,,,,,,,,,,,,,
+multi5,1,0,0,0,0,,,,,,,,,,,,,,,,,
+"Test compression matrix (note: the columns and rows headers must be filenames. Also, keep the same order)",,,,,,,,,,,,,,,,,,,,,,
+,Multi5,Multi4,Multi3,Multi2,Multi1,,,,,,,,,,,,,,,,,
+multi1,0,0,0,0,1,,,,,,,,,,,,,,,,,
+multi2,0,0,0,1,0,,,,,,,,,,,,,,,,,
+multi3,0,0,1,0,0,,,,,,,,,,,,,,,,,
+multi4,0,1,0,0,0,,,,,,,,,,,,,,,,,
+multi5,1,0,0,0,0,,,,,,,,,,,,,,,,,
+GT filename for each protein (note: keep the same order):,,,,,,,,,,,,,,,,,,,,,,
+GT filenames,Glut1,CK5,CD4,Pan-Keratin,COL1A1,ECAD,CD14,CD8,CD68,FAP,HLA-DRDPDQ,TOX,Tryptase,CD3,SMA,CK7,CD15,gH2AX,CD31,CD38,CD20,KI67

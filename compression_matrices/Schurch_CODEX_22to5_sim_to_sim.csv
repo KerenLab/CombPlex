@@ -1,0 +1,23 @@
+﻿Reconstruction matrix A (note: protein and channel names can be represented by nicknames instead of filenames):,,,,,,,,,,,,,,,,,,,,,,
+,CD45RA,Ki67,CD68,CD34,CD56,Collagen IV,aSMA,CD20,CD45RO,beta-catenin,BCL-2,CD4,CD11b,CD45,Vimentin,FOXP3,CD3,Podoplanin,CD8,CD38,CD11c,CD163
+multi1,0,0,0,1,0,0,0,0,1,0,0,1,1,0,1,0,1,0,0,1,1,1
+multi2,0,1,0,0,0,0,1,1,0,1,0,0,1,0,0,1,1,1,0,1,0,0
+multi3,0,0,1,0,0,1,0,0,0,1,0,1,0,1,0,1,0,1,1,0,1,0
+multi4,0,0,0,0,1,1,0,1,1,0,1,0,0,0,0,1,1,0,1,0,1,1
+multi5,1,0,0,0,0,0,1,0,0,0,1,0,0,1,1,0,0,1,1,1,0,1
+"Training compression matrix (note: the columns and rows headers must be filenames. Also, keep the same order)",,,,,,,,,,,,,,,,,,,,,,
+,CD45RA_clean,Ki67_clean,CD68_clean,CD34_clean,CD56_clean,Collagen_clean,SMA_clean,CD20_clean,CD45RO_clean,Bcat_clean,BCL_clean,CD4_clean,CD11b_clean,CD45_clean,Vimentin_clean,FOXP3_clean,CD3_clean,Podoplanin_clean,CD8_clean,CD38_clean,CD11c_clean,CD163_clean
+multi1,0,0,0,1,0,0,0,0,1,0,0,1,1,0,1,0,1,0,0,1,1,1
+multi2,0,1,0,0,0,0,1,1,0,1,0,0,1,0,0,1,1,1,0,1,0,0
+multi3,0,0,1,0,0,1,0,0,0,1,0,1,0,1,0,1,0,1,1,0,1,0
+multi4,0,0,0,0,1,1,0,1,1,0,1,0,0,0,0,1,1,0,1,0,1,1
+multi5,1,0,0,0,0,0,1,0,0,0,1,0,0,1,1,0,0,1,1,1,0,1
+"Test compression matrix (note: the columns and rows headers must be filenames. Also, keep the same order)",,,,,,,,,,,,,,,,,,,,,,
+,CD45RA_clean,Ki67_clean,CD68_clean,CD34_clean,CD56_clean,Collagen_clean,SMA_clean,CD20_clean,CD45RO_clean,Bcat_clean,BCL_clean,CD4_clean,CD11b_clean,CD45_clean,Vimentin_clean,FOXP3_clean,CD3_clean,Podoplanin_clean,CD8_clean,CD38_clean,CD11c_clean,CD163_clean
+multi1,0,0,0,1,0,0,0,0,1,0,0,1,1,0,1,0,1,0,0,1,1,1
+multi2,0,1,0,0,0,0,1,1,0,1,0,0,1,0,0,1,1,1,0,1,0,0
+multi3,0,0,1,0,0,1,0,0,0,1,0,1,0,1,0,1,0,1,1,0,1,0
+multi4,0,0,0,0,1,1,0,1,1,0,1,0,0,0,0,1,1,0,1,0,1,1
+multi5,1,0,0,0,0,0,1,0,0,0,1,0,0,1,1,0,0,1,1,1,0,1
+GT filename for each protein (note: keep the same order):,,,,,,,,,,,,,,,,,,,,,,
+GT filenames,CD45RA_clean,Ki67_clean,CD68_clean,CD34_clean,CD56_clean,Collagen_clean,SMA_clean,CD20_clean,CD45RO_clean,Bcat_clean,BCL_clean,CD4_clean,CD11b_clean,CD45_clean,Vimentin_clean,FOXP3_clean,CD3_clean,Podoplanin_clean,CD8_clean,CD38_clean,CD11c_clean,CD163_clean

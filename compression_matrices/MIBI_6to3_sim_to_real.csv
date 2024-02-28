@@ -1,0 +1,17 @@
+﻿Reconstruction matrix A (note: protein and channel names can be represented by nicknames instead of filenames):,,,,,,
+,CD45,CD8,Ki67,Pan-Keratin,HLA-DR,SMA
+144_HLA_Keratin_Ki67_SMA,0,0,1,1,1,1
+147_CD8_HLA_SMA,0,1,0,0,1,1
+153_SMA_Keratin_CD45,1,0,0,1,0,1
+"Training compression matrix (note: the columns and rows headers must be filenames. Also, keep the same order)",,,,,,
+,CD45,CD8,Ki67,Pan-Keratin,HLA-DR,SMA
+144_HLA_Keratin_Ki67_SMA,0,0,1,1,1,1
+147_CD8_HLA_SMA,0,1,0,0,1,1
+153_SMA_Keratin_CD45,1,0,0,1,0,1
+"Test compression matrix (note: the columns and rows headers must be filenames. Also, keep the same order)",,,,,,
+,144_HLA_Keratin_Ki67_SMA,147_CD8_HLA_SMA,153_SMA_Keratin_CD45,,,
+144_HLA_Keratin_Ki67_SMA,1,0,0,,,
+147_CD8_HLA_SMA,0,1,0,,,
+153_SMA_Keratin_CD45,0,0,1,,,
+GT filename for each protein (note: keep the same order):,,,,,,
+GT filenames,CD45,CD8,Ki67,Pan-Keratin,HLA-DR,SMA

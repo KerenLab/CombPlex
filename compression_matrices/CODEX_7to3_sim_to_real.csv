@@ -1,0 +1,17 @@
+﻿Reconstruction matrix A (note: protein and channel names can be represented by nicknames instead of filenames):,,,,,,,,,,,,
+,CD45,CD8,Ki67,Pan-Keratin,HLA-DR,p53,SMA,,,,,
+Pan-Keratin-Ki67-SMA-HLA-DR_Clean,0,0,1,1,1,0,1,,,,,
+CD8-p53-SMA-HLA-DR_Clean,0,1,0,0,1,1,1,,,,,
+Pan-Keratin-p53-SMA-CD45_Clean,1,0,0,1,0,1,1,,,,,
+"Training compression matrix (note: the columns and rows headers must be filenames. Also, keep the same order)",,,,,,,,,,,,
+,CD45_union,CD8_union,Ki67_union,Pan-Keratin_550_union,Pan-Keratin_750_union,HLA-DR_550_union,HLA-DR_647_union,p53_647_union,p53_750_union,SMA_550_union,SMA_647_union,SMA_750_union
+Pan-Keratin-Ki67-SMA-HLA-DR_Clean,0,0,1,1,0,1,0,0,0,1,0,0
+CD8-p53-SMA-HLA-DR_Clean,0,1,0,0,0,0,1,1,0,0,1,0
+Pan-Keratin-p53-SMA-CD45_Clean,1,0,0,0,1,0,0,0,1,0,0,1
+"Test compression matrix (note: the columns and rows headers must be filenames. Also, keep the same order)",,,,,,,,,,,,
+,Pan-Keratin-p53-SMA-CD45_Clean,CD8-p53-SMA-HLA-DR_Clean,Pan-Keratin-Ki67-SMA-HLA-DR_Clean,,,,,,,,,
+Pan-Keratin-Ki67-SMA-HLA-DR_Clean,0,0,1,,,,,,,,,
+CD8-p53-SMA-HLA-DR_Clean,0,1,0,,,,,,,,,
+Pan-Keratin-p53-SMA-CD45_Clean,1,0,0,,,,,,,,,
+GT filename for each protein (note: keep the same order):,,,,,,,,,,,,
+GT filenames,CD45_union,CD8_union,Ki67_union,Pan-Keratin_550_union,HLA-DR_647_union,p53_647_union,SMA_647_union,,,,,

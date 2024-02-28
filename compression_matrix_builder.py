@@ -5,11 +5,13 @@ import pandas as pd
 import csv
 
 # set these parameters before executing
-output_filename = 'my_new_compression_matrices_file' # The output compression matrices excel filename 
-num_proteins = 7 # Number of proteins to compress. This parameter corresponds to the number of columns.
-num_channels = 3 # optional, insert None or number. This parameter corresponds to the number of rows.
+output_filename = 'check_me_out' # The output compression matrices excel filename 
+num_proteins = 22 # Number of proteins to compress. This parameter corresponds to the number of columns.
+num_channels = 5 # optional, insert None or number. This parameter corresponds to the number of rows.
 max_antibody_partition = math.inf # optional, insert math.inf or number. This parameter corresponds to the maximum sum of a column.
 max_overlapping_imgs = math.inf # optional, insert math.inf or number. This parameter corresponds to the maximum sum of a row.
+trained_with_simulations = True # [True | False]
+inference_on_simulated_data = False # [True | False]
 
 def fill_compression_matrix(possible_permutations, num_targets):
     # fill compression matrix until (max_column_sum - 1)
@@ -66,21 +68,23 @@ def create_compression_matrix(num_targets, max_antibody_partition, max_overlappi
             print(f'Done (num_channels={num_channels}), compression matrices excel file has been created!')
             return pd.DataFrame(data=final_table, columns=targets_names, index=channels_names)
             
-
+# creates compression matrix A
 A_df = create_compression_matrix(num_proteins, max_antibody_partition, max_overlapping_imgs, num_channels)
+# creats identity multis table 
+id_mat = np.eye(num_channels)
+id_multis_df = pd.DataFrame(id_mat, index=A_df.index, columns=A_df.index)
 
 # wrtie new compression matrices csv file
 separators = ['Reconstruction matrix A (note: protein and channel names can be represented by nicknames instead of filenames):\n',
               'Training compression matrix (note: the columns and rows headers must be filenames. Also; keep the same order)\n',
               'Test compression matrix (note: the columns and rows headers must be filenames. Also; keep the same order)\n',
               'GT filename for each protein (note: keep the same order):\n']
-combined_csv = ''
-for sep in separators[0:-1]:
-    combined_csv += sep
-    combined_csv += A_df.to_csv()
-combined_csv += separators[-1]
+combined_csv = separators[0] + A_df.to_csv() + separators[1]
+combined_csv += f'{A_df.to_csv() if trained_with_simulations else id_multis_df.to_csv()}' + separators[2]
+combined_csv += f'{A_df.to_csv() if inference_on_simulated_data else id_multis_df.to_csv()}' + separators[3]
 combined_csv += 'GT filenames,' + ','.join(A_df.columns.to_list())
 lines = combined_csv.split('\n')
+
 # Write the lines to a CSV file
 with open(f'compression_matrices/{output_filename}.csv', "w", newline="") as csvfile:
     csv_writer = csv.writer(csvfile)
@@ -88,5 +92,3 @@ with open(f'compression_matrices/{output_filename}.csv', "w", newline="") as csv
         cells = line.split(',')
         cells = [cell.replace(';', ',') for cell in cells]
         csv_writer.writerow(cells)
-
-

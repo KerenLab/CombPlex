@@ -1,6 +1,7 @@
 /wandb/
 /results/*
 lsf*
+sequential_job_runner.sh
 /pretrained_models/*
 /datasets/*
 /temp/

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import torch
-import numpy as np
 import torch.nn as nn
-import torch.nn.functional as F
 from models.UNet_3Plus.layers import unetConv2
 from models.UNet_3Plus.init_weights import init_weights
 '''
@@ -10,14 +8,18 @@ from models.UNet_3Plus.init_weights import init_weights
 '''
 class UNet_3Plus(nn.Module):
 
-    def __init__(self, in_channels, n_classes, filters, feature_scale=4, is_deconv=True, is_batchnorm=True):
+    def __init__(self, in_channels, n_classes, filters, feature_scale=4, dropout_rate=0, is_deconv=True, is_batchnorm=True):
         super(UNet_3Plus, self).__init__()
         self.is_deconv = is_deconv
         self.in_channels = in_channels
         self.is_batchnorm = is_batchnorm
         self.feature_scale = feature_scale
 
-        # filters = [64, 128, 256, 512, 1024]
+        self.dropout1 = nn.Dropout2d(p=dropout_rate)
+        self.dropout2 = nn.Dropout2d(p=dropout_rate)
+        self.dropout3 = nn.Dropout2d(p=dropout_rate)
+        self.dropout4 = nn.Dropout2d(p=dropout_rate)
+        self.dropout5 = nn.Dropout2d(p=dropout_rate)
 
         ## -------------Encoder--------------
         self.conv1 = unetConv2(self.in_channels, filters[0], self.is_batchnorm)
@@ -192,18 +194,23 @@ class UNet_3Plus(nn.Module):
     def forward(self, inputs):
         ## -------------Encoder-------------
         h1 = self.conv1(inputs)  # h1->320*320*64
+        h1 = self.dropout1(h1)
 
         h2 = self.maxpool1(h1)
         h2 = self.conv2(h2)  # h2->160*160*128
+        h2 = self.dropout2(h2)
 
         h3 = self.maxpool2(h2)
         h3 = self.conv3(h3)  # h3->80*80*256
+        h3 = self.dropout3(h3)
 
         h4 = self.maxpool3(h3)
         h4 = self.conv4(h4)  # h4->40*40*512
+        h4 = self.dropout4(h4)
 
         h5 = self.maxpool4(h4)
-        hd5 = self.conv5(h5)  # h5->20*20*1024
+        h5 = self.conv5(h5)  # h5->20*20*1024
+        hd5 = self.dropout5(h5)
 
         ## -------------Decoder-------------
         h1_PT_hd4 = self.h1_PT_hd4_relu(self.h1_PT_hd4_bn(self.h1_PT_hd4_conv(self.h1_PT_hd4(h1))))
