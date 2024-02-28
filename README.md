@@ -1,6 +1,6 @@
 # CombPlex
 
-![CombPlex's logo](https://github.com/liorbensha/Combplex/assets/89635508/8f2ff95d-770d-4faa-8724-abfb464369da)
+![CombPlex's logo](CombPlex_logo.png)
 
 **CombPlex** (COMBinatorial multiPLEXing) is a combinatorial staining platform integrated with an algorithmic framework, enabling a significant expansion in the number of proteins that can be visualized *in-situ*.
 
