@@ -187,28 +187,20 @@ def analyze_fov(fov, fov_GT_singles, fov_combplex_pred, f1_df, dilated_f1_df):
         # flatten GT and recon img
         GT_single_np = (GT_single.numpy().flatten() > 0).astype(float)
         recon_single_np = (recon_single.numpy().flatten() > 0).astype(float)
-        # assign F1 score in case of empty GT img
-        if GT_single_np.sum() == 0:
-            if recon_single_np.sum() == 0:
-                f1_df.at[fov, f'{singles_names[protein_idx]}'] = 1
-                dilated_f1_df.at[fov, f'{singles_names[protein_idx]}'] = 1
-            else:
-                f1_df.at[fov, f'{singles_names[protein_idx]}'] = 0
-                dilated_f1_df.at[fov, f'{singles_names[protein_idx]}'] = 0
-        else:
-            # calculate F1 score
-            f1_score_result = f1_score(GT_single_np, recon_single_np)
-            f1_df.at[fov, f'{singles_names[protein_idx]}'] = f1_score_result
 
-            tp_mask = ((GT_single > 0) * (recon_single > 0)).float()
-            fp_mask = ((GT_single == 0) * (recon_single > 0)).int()
-            fn_mask = ((GT_single > 0) * (recon_single == 0)).int()
-            dilated_tp_mask = (ndimage.uniform_filter(tp_mask, size=5) > 0).astype(int)
-            dilated_pred = (recon_single > 0).int() - fp_mask * dilated_tp_mask + fn_mask * dilated_tp_mask
-            pred_dilated = dilated_pred.flatten()
+        # calculate F1 score
+        f1_score_result = f1_score(GT_single_np, recon_single_np, zero_division=1)
+        f1_df.at[fov, f'{singles_names[protein_idx]}'] = f1_score_result
 
-            dilated_F1_score_result = f1_score(GT_single_np, pred_dilated)
-            dilated_f1_df.at[fov, f'{singles_names[protein_idx]}'] = dilated_F1_score_result
+        tp_mask = ((GT_single > 0) * (recon_single > 0)).float()
+        fp_mask = ((GT_single == 0) * (recon_single > 0)).int()
+        fn_mask = ((GT_single > 0) * (recon_single == 0)).int()
+        dilated_tp_mask = (ndimage.uniform_filter(tp_mask, size=5) > 0).astype(int)
+        dilated_pred = (recon_single > 0).int() - fp_mask * dilated_tp_mask + fn_mask * dilated_tp_mask
+        pred_dilated = dilated_pred.flatten()
+
+        dilated_F1_score_result = f1_score(GT_single_np, pred_dilated, zero_division=1)
+        dilated_f1_df.at[fov, f'{singles_names[protein_idx]}'] = dilated_F1_score_result
 
         # rename reconstruction file with its F1 score
         os.rename(os.path.join(fov_dir_path, 'recon_{}.tif'.format(singles_names[protein_idx])), 
