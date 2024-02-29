@@ -3,56 +3,79 @@ from torchvision import transforms as T
 import torch.nn.functional as F
 import torch
 import skimage.io as io
-import pandas as pd
 import numpy as np
 import os
 from util.util import read_compression_matrix_form
 
-class RandomRotation(object):
+# Pytorch random 90 degrees rotation object
+class Random90Rotation(object):
     def __init__(self):
         super().__init__()
 
     def __call__(self, x):
-        x = T.RandomHorizontalFlip()(x)
         k = torch.randint(low=0, high=4, size=(1,))[0]
         return torch.rot90(x, k=k, dims=[-2, -1])
 
-def fluorescence_skew(x, num_proteins_map, multis_names, skew_parameters, fluorescence_gaussian_noise):
-    num_proteins_vals = np.unique(num_proteins_map.cpu())
-    # iterate over all multis
-    for i, multi_name in enumerate(multis_names):
-        # iterate over all possible values for how many proteins expressed in a pixel
-        for num_protein_val in num_proteins_vals[num_proteins_vals > 0]:
-            # skew the multis according to the supplied table
-            skew_coeff = 1 / (1 + skew_parameters.loc['mean', f'{multi_name}_{int(num_protein_val)}'])
-            x[:,i][num_proteins_map[:, i] == num_protein_val] = torch.normal(skew_coeff * x[:,i][num_proteins_map[:, i] == num_protein_val], 
-                                                                             fluorescence_gaussian_noise * x[:,i][num_proteins_map[:, i] == num_protein_val])
-    return x
+# Random rotation for each 2*2 patch in the image, used for augmenting MIBI data 
+def swap_img_patches(protein_single_imgs_tensor):
+    # Get the dimensions of the input image
+    batch_size, channels, rows, cols = protein_single_imgs_tensor.shape
+    
+    for fov_idx in range(batch_size):
+        fov_imgs = protein_single_imgs_tensor[fov_idx]
+        # Check if the image size is divisible by 2
+        if rows % 2 != 0 or cols % 2 != 0:
+            raise ValueError("Image dimensions must be divisible by 2 for splitting into 2x2 patches.")
+
+        # Split the image into 2x2 patches
+        patches = fov_imgs.view(1, channels, rows // 2, 2, cols // 2, 2)
+
+        # Divide the patches into two groups
+        num_groups = 8
+        group_size = patches.shape[2] // num_groups
+        group_indices = torch.randperm(patches.shape[2])
+
+        # Randomly rotate only one group of patches
+        rotated_patches = torch.zeros_like(patches)
+
+        for i in range(num_groups):
+            group_mask = (group_indices >= i * group_size) & (group_indices < (i + 1) * group_size)
+            rotation_angle = torch.randint(4, (1,)).item()
+            rotated_patches[:, :, group_mask] = torch.rot90(patches[:, :, group_mask], k=rotation_angle, dims=(3, 5))
+
+        # Reshape the rotated patches back to the original shape
+        protein_single_imgs_tensor[fov_idx] = rotated_patches.view(1, channels, rows, cols)
+
+    return protein_single_imgs_tensor
 
 class Combplex_Dataset(Dataset):
-    def __init__(self, dataset_path, cfg, device):
-        self.cfg = cfg
+    def __init__(self, dataset_path, is_validation, config, device):
+        self.batch_size = config['batch_size']
+        scale_CODEX_vals = True if ((config['model_type'] == 'Value reconstruction network' ) and (config['imaging_platform'] == 'CODEX')) else False
         self.device = device
+        self.is_validation = is_validation
 
-        # load simulation details
-        _, _, multis_names, train_compression_matrix, _, GT_filenames = read_compression_matrix_form(cfg['compression_matrix_form_path'])
-        simulation_filenames = list(train_compression_matrix.columns)
-        self.simulation_mat = torch.from_numpy(train_compression_matrix.values).unsqueeze(-1).unsqueeze(-1).to(device)
+        # load compression matrix form details
+        _, _, multis_names, train_compression_matrix, test_compression_matrix, GT_filenames = read_compression_matrix_form(config['compression_matrix_form_path'])
+        if is_validation:
+            # use real multis
+            self.simulation_mat = torch.from_numpy(test_compression_matrix.values).unsqueeze(-1).unsqueeze(-1).to(device)
+            simulation_filenames = list(test_compression_matrix.columns)
+        else:
+            # use single protein images for simulation
+            self.simulation_mat = torch.from_numpy(train_compression_matrix.values).unsqueeze(-1).unsqueeze(-1).to(device)
+            simulation_filenames = list(train_compression_matrix.columns)
         self.num_proteins = len(GT_filenames)
         self.num_sim_imgs = len(simulation_filenames)
-        self.multis_names = multis_names
-        if cfg['data_type'] == 'Fluorescence':
-            self.fluorescence_skew = fluorescence_skew
-            self.skew_parameters = pd.read_csv(cfg['skew_parameters_csv_path'], index_col=0)
-        
+
+        # load noise parameters
+        self.noise_parameters = config['noise_parameters']
+
         # set tranforms according to data type
-        x_transform_lst, y_transform_lst = [T.RandomCrop(cfg['crop_size']), RandomRotation()], []
-        if cfg['data_type'] == 'MIBI':
-            x_transform_lst.append(torch.nn.AvgPool2d(kernel_size=5, stride=1, padding=2))
-            y_transform_lst.append(T.Lambda(lambda x: torch.poisson(x)))
-        self.x_transform, self.y_transform = T.Compose(x_transform_lst), T.Compose(y_transform_lst) 
-        
-        # load datasets
+        self.general_augmentations = T.Compose([T.RandomCrop(config['crop_size']), T.RandomHorizontalFlip(), T.RandomVerticalFlip(), Random90Rotation()])
+        self.imaging_platform = config['imaging_platform']
+
+        # load dataset
         self.data = []
         for fov in os.listdir(dataset_path):
             fov_path = os.path.join(dataset_path, fov)
@@ -65,41 +88,49 @@ class Combplex_Dataset(Dataset):
             for file_name in GT_filenames:
                 fov_stacked.append(io.imread(os.path.join(fov_path, '{}.tif'.format(file_name))))
             fov_stacked_tensor = torch.from_numpy(np.stack(fov_stacked).astype(np.float32)).float()
-            # for fluorescence data, calculate the num proteins expressed in every pixel in each multi
-            if cfg['data_type'] == 'Fluorescence':
-                for multi_name in multis_names:
-                    indices = [i for i, value in enumerate(train_compression_matrix.loc[multi_name].tolist()) if value != 0]
-                    num_proteins_map = (fov_stacked_tensor[indices] > 0).float().sum(dim=0).int()
-                    fov_stacked.append(num_proteins_map)
-                fov_stacked_tensor = torch.from_numpy(np.stack(fov_stacked).astype(np.float32)).float()
+            if scale_CODEX_vals:
+                fov_stacked_tensor = fov_stacked_tensor / (2 ** 16 - 1)
             # add stacked tensor to dataset
             self.data.append(fov_stacked_tensor)
 
         print('loaded %d images' % len(self.data))
         self.step = torch.zeros(1) - 1
 
-    def __getitem__(self, index):
+    def __getitem__(self, idx):
         self.step += 1
         sample = {'step': self.step}
-        batch_data = []
+        
         # create singles batch tensor
-        for _ in range(self.cfg['batch_size']):
+        batch_data = []
+        for _ in range(self.batch_size):
             # sample a random image
             i = torch.randint(0, len(self.data), (1,))[0]
             fov_data = self.data[i].float()
-            fov_data = self.x_transform(fov_data)
+            fov_data = self.general_augmentations(fov_data)
             batch_data.append(fov_data)
         batch_data = torch.stack(batch_data, dim=0).to(self.device)
+
         # create sample of dataset
-        simulation_mat = torch.normal(mean=self.simulation_mat, std=(self.cfg['compression_matrix_noise'] * self.simulation_mat))
-        if self.cfg['data_type'] == 'Fluorescence':
-            simulation_singles, sample['GT_singles'], num_proteins_map = torch.split(batch_data, [self.num_sim_imgs, self.num_proteins, len(self.multis_names)], dim=1)
-            multis = F.conv2d(simulation_singles, simulation_mat)
-            multis = self.fluorescence_skew(multis, num_proteins_map, self.multis_names, self.skew_parameters, self.cfg['fluorescence_gaussian_noise'])
+        if self.is_validation:
+            # apply no noise or additional augmentations
+            simulation_imgs, sample['GT_singles'] = torch.split(batch_data, [self.num_sim_imgs, self.num_proteins], dim=1)
+            if self.imaging_platform == 'MIBI':
+                sample['GT_singles'] = torch.nn.AvgPool2d(kernel_size=5, stride=1, padding=2)(sample['GT_singles'])
+            sample['multis'] = F.conv2d(simulation_imgs, self.simulation_mat)
         else:
-            simulation_singles, sample['GT_singles'] = torch.split(batch_data, [self.num_sim_imgs, self.num_proteins], dim=1)
-            multis = self.y_transform(F.conv2d(simulation_singles, simulation_mat))
-        sample['multis'] = multis
+            n1, n2, n3, n4 = self.noise_parameters
+            # create noisy compression matrix A' using n1,n2
+            simulation_mat = torch.abs(np.random.normal(1, n1) * torch.normal(mean=self.simulation_mat, std=(n2 * self.simulation_mat)))
+            simulation_imgs, sample['GT_singles'] = torch.split(batch_data, [self.num_sim_imgs, self.num_proteins], dim=1)
+            # if MIBI, apply transform of swapping 2*2 patches and smoothing GT
+            if self.imaging_platform == 'MIBI':
+                simulation_imgs = swap_img_patches(simulation_imgs)
+                sample['GT_singles'] = torch.nn.AvgPool2d(kernel_size=5, stride=1, padding=2)(sample['GT_singles'])
+            # create multis y = A' * x
+            multis = F.conv2d(simulation_imgs, simulation_mat)
+            # Apply pixelwise noise on multis using n3,n4 
+            sample['multis'] = torch.abs(torch.normal(multis, n3 * multis) + torch.normal(n4 * torch.ones_like(multis), 0.2 * n4 * torch.ones_like(multis))) * (multis > 0)
+
         return sample
 
     def __len__(self):

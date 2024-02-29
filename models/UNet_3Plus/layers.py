@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from models.UNet_3Plus.init_weights import init_weights
 
 

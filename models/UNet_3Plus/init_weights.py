@@ -1,5 +1,3 @@
-import torch
-import torch.nn as nn
 from torch.nn import init
 
 def weights_init_normal(m):
